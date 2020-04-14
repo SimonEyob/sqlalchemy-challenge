@@ -41,8 +41,8 @@ def welcome():
         f"/api/v1.0/precipitation<br/>Returns a JSON list of percipitation data for the dates between 8/23/16 and 8/23/17<br/><br/>"
         f"/api/v1.0/stations<br/>Returns a JSON list of the weather stations<br/><br/>"
         f"/api/v1.0/tobs<br/>Returns a JSON list of the Temperature Observations (tobs) for each station for the dates between 8/23/16 and 8/23/17<br/><br/>"
-        f"/api/v1.0/date<br/>Returns a JSON list of the minimum temperature, the average temperature, and the max temperature for the dates between the given start date and 8/23/17<br/><br/>."
-        f"/api/v1.0/start_date/end_date<br/>Returns a JSON list of the minimum temperature, the average temperature, and the max temperature for the dates between the given start date and end date<br/><br/>."
+        f"/api/v1.0/start_date<br/>Returns a JSON list of the minimum temperature, the average temperature, and the max temperature for the dates between the given start date and 8/23/17<br/><br/>"
+        f"/api/v1.0/start_date/end_date<br/>Returns a JSON list of the minimum temperature, the average temperature, and the max temperature for the dates between the given start date and end date<br/><br/>"
     )
 
 
@@ -111,13 +111,14 @@ def startdate(start):
        func.max(Measurement.tobs),
        func.avg(Measurement.tobs)]
     start_date=session.query(Measurement.date).filter(Measurement.date == start)
-    if start_date[0][0]==start:
+    try:
+        test_return=start_date[0][0]
         results=session.query(*temp).filter(Measurement.date > start).all()
         result=[f"Min TEMP = {results[0][0]}",f"MAX TEMP = {results[0][1]}",f"AVG TEMP = {results[0][2]}"]
         temp_ans=list(np.ravel(result))
         return jsonify(temp_ans)
-    # else:
-    #     return jsonify({"error": f"Date chosen {start} does not exist in database"}), 404
+    except:
+        return jsonify({"error": f"Date chosen {start} does not exist in database"}), 404
 
 
 
@@ -130,11 +131,17 @@ def start_end_date(start,end):
     temp = [func.min(Measurement.tobs),
        func.max(Measurement.tobs),
        func.avg(Measurement.tobs)]
-    start_date=session.query(Measurement.date).filter(Measurement.date == start).filter(Measurement.date ==end)
-    results=session.query(*temp).filter(Measurement.date > start).filter(Measurement.date < end).all()
-    result=[f"Min TEMP = {results[0][0]}",f"MAX TEMP = {results[0][1]}",f"AVG TEMP = {results[0][2]}"]
-    temp_ans=list(np.ravel(result))
-    return jsonify(temp_ans)
+    start_date=session.query(Measurement.date).filter(Measurement.date == start)
+    end_date=session.query(Measurement.date).filter(Measurement.date == end)
+    try:
+        test_return_start=start_date[0][0]
+        test_return_end=end_date[0][0]
+        results=session.query(*temp).filter(Measurement.date > start).filter(Measurement.date < end).all()
+        result=[f"Min TEMP = {results[0][0]}",f"MAX TEMP = {results[0][1]}",f"AVG TEMP = {results[0][2]}"]
+        temp_ans=list(np.ravel(result))
+        return jsonify(temp_ans)
+    except:
+        return jsonify({"error": f"Date range chosen {start} till {end} does not exist in database"}), 404
 
 
 if __name__ == '__main__':
